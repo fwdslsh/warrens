@@ -2,7 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/fwdslsh/rabit/refs/heads/main/schemas/warren.json",
     "specVersion": "fwdslsh.dev/rabit/schemas/0.4.0/warren",
     "kind": "warren",
-    "title": "fwdslsh sarren",
+    "title": "fwdslsh warren",
     "description": "Registry containing a burrow reference for the fwdslsh digthub repositories.",
     "updated": "2026-01-13T00:00:00Z",
     "burrows": [
