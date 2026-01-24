@@ -66,6 +66,7 @@ function cacheElements() {
   elements.themeToggle = document.getElementById('theme-toggle');
   elements.collapseSidebar = document.getElementById('collapse-sidebar');
   elements.expandSidebar = document.getElementById('expand-sidebar');
+  elements.sidebarBack = document.getElementById('sidebar-back');
   elements.backBtn = document.getElementById('back-btn');
   elements.sidebar = document.getElementById('sidebar');
   elements.breadcrumb = document.getElementById('breadcrumb');
@@ -89,8 +90,9 @@ function cacheElements() {
   elements.errorMessage = document.getElementById('error-message');
   elements.contentDisplay = document.getElementById('content-display');
   elements.contentPre = document.getElementById('content-pre');
+  elements.contentMarkdown = document.getElementById('content-markdown');
+  elements.closeContentBtn = document.getElementById('close-content-btn');
   elements.burrowDisplay = document.getElementById('burrow-display');
-  elements.burrowInfo = document.getElementById('burrow-info');
   elements.burrowEntries = document.getElementById('burrow-entries');
   elements.statusText = document.getElementById('status-text');
   elements.cacheStatus = document.getElementById('cache-status');
@@ -106,6 +108,7 @@ function setupEventListeners() {
   elements.collapseSidebar.addEventListener('click', () => toggleSidebar(true));
   elements.expandSidebar.addEventListener('click', () => toggleSidebar(false));
   elements.backBtn.addEventListener('click', goBack);
+  elements.closeContentBtn.addEventListener('click', closeContent);
 
   elements.addressInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') navigate(elements.addressInput.value);
@@ -127,10 +130,10 @@ function applyTheme(theme) {
 function toggleSidebar(collapse) {
   if (collapse) {
     elements.sidebar.classList.add('collapsed');
-    elements.expandSidebar.style.display = 'block';
+    elements.expandSidebar.classList.add('visible');
   } else {
     elements.sidebar.classList.remove('collapsed');
-    elements.expandSidebar.style.display = 'none';
+    elements.expandSidebar.classList.remove('visible');
   }
 }
 
@@ -155,7 +158,23 @@ function goBack() {
 
 // Update back button visibility
 function updateBackButton() {
-  elements.backBtn.style.display = state.navigationStack.length > 1 ? 'block' : 'none';
+  elements.sidebarBack.style.display = state.navigationStack.length > 1 ? 'block' : 'none';
+}
+
+// Close file content view and return to current burrow/warren
+function closeContent() {
+  state.currentEntry = null;
+
+  // Remove active state from sidebar entries
+  document.querySelectorAll('.entry-item').forEach(el => el.classList.remove('active'));
+
+  // Redisplay the current burrow or warren
+  const currentNav = state.navigationStack[state.navigationStack.length - 1];
+  if (currentNav?.type === 'warren' && currentNav.warren) {
+    displayWarren(currentNav.warren);
+  } else if (currentNav?.type === 'burrow' && currentNav.burrow) {
+    displayBurrow(currentNav.burrow);
+  }
 }
 
 // Navigation
@@ -498,7 +517,7 @@ function displayWarren(warren) {
   updateBackButton();
 
   // Display burrows as entries
-  const entries = (warren.burrows || []).map(burrow => ({
+  let entries = (warren.burrows || []).map(burrow => ({
     ...burrow,
     kind: 'burrow',
     title: burrow.title || burrow.id,
@@ -517,22 +536,22 @@ function displayWarren(warren) {
     });
   }
 
+  // Sort like a file explorer
+  entries = sortEntriesFileExplorer(entries);
+
   displayEntries(entries);
 
-  // Show warren details in content area
-  elements.burrowDisplay.style.display = 'block';
-  elements.burrowInfo.innerHTML = `
-    <h2>${escapeHtml(warren.title || 'Warren')}</h2>
-    <p>${escapeHtml(warren.description || 'No description')}</p>
-    <div class="burrow-meta">
-      <span>Version: ${escapeHtml(extractVersion(warren.specVersion))}</span>
-      <span>Updated: ${formatDate(warren.updated)}</span>
-      <span>Burrows: ${warren.burrows?.length || 0}</span>
-      ${warren.warrens?.length ? `<span>Federated: ${warren.warrens.length}</span>` : ''}
-    </div>
-  `;
+  // Show warren info in content header
+  elements.contentHeader.style.display = 'block';
+  elements.closeContentBtn.style.display = 'none';
+  elements.contentKind.textContent = 'warren';
+  elements.contentTitle.textContent = warren.title || 'Warren';
+  elements.contentUri.textContent = warren.description || '';
+  elements.contentSize.textContent = `${warren.burrows?.length || 0} burrows`;
+  elements.contentType.textContent = `Updated: ${formatDate(warren.updated)}`;
 
-  // Show entry cards
+  // Show entry cards in content area
+  elements.burrowDisplay.style.display = 'block';
   displayEntryCards(entries);
 
   setStatus('Ready');
@@ -558,27 +577,22 @@ function displayBurrow(burrow, parentContext = null) {
   updateBreadcrumb();
   updateBackButton();
 
-  // Get entries sorted by priority
-  const entries = [...(burrow.entries || [])].sort((a, b) =>
-    (b.priority || 0) - (a.priority || 0)
-  );
+  // Get entries sorted like a file explorer
+  const entries = sortEntriesFileExplorer(burrow.entries || []);
 
   displayEntries(entries);
 
-  // Show burrow details in content area
-  elements.burrowDisplay.style.display = 'block';
-  elements.burrowInfo.innerHTML = `
-    <h2>${escapeHtml(burrow.title || 'Burrow')}</h2>
-    <p>${escapeHtml(burrow.description || 'No description')}</p>
-    <div class="burrow-meta">
-      <span>Version: ${escapeHtml(extractVersion(burrow.specVersion))}</span>
-      <span>Updated: ${formatDate(burrow.updated)}</span>
-      <span>Entries: ${entries.length}</span>
-    </div>
-    ${burrow.agents?.context ? `<p style="margin-top: var(--space-md); font-style: italic; color: var(--text-secondary);">${escapeHtml(burrow.agents.context)}</p>` : ''}
-  `;
+  // Show burrow info in content header
+  elements.contentHeader.style.display = 'block';
+  elements.closeContentBtn.style.display = 'none';
+  elements.contentKind.textContent = 'burrow';
+  elements.contentTitle.textContent = burrow.title || 'Burrow';
+  elements.contentUri.textContent = burrow.description || '';
+  elements.contentSize.textContent = `${entries.length} entries`;
+  elements.contentType.textContent = `Updated: ${formatDate(burrow.updated)}`;
 
-  // Show entry cards
+  // Show entry cards in content area
+  elements.burrowDisplay.style.display = 'block';
   displayEntryCards(entries);
 
   setStatus('Ready');
@@ -787,6 +801,39 @@ async function navigateToDir(entry) {
   }
 }
 
+// Sort entries like a file explorer: directories/burrows first, then files, each alphabetically
+function sortEntriesFileExplorer(entries) {
+  const folders = [];
+  const files = [];
+
+  entries.forEach(entry => {
+    if (entry.kind === 'dir' || entry.kind === 'burrow' || entry.kind === 'warren' || entry.kind === 'map') {
+      folders.push(entry);
+    } else {
+      files.push(entry);
+    }
+  });
+
+  // Sort each group alphabetically by title (case-insensitive)
+  const alphabeticalSort = (a, b) => {
+    const titleA = (a.title || a.id || '').toLowerCase();
+    const titleB = (b.title || b.id || '').toLowerCase();
+    return titleA.localeCompare(titleB);
+  };
+
+  folders.sort(alphabeticalSort);
+  files.sort(alphabeticalSort);
+
+  return [...folders, ...files];
+}
+
+// Check if content is markdown
+function isMarkdown(entry) {
+  if (entry.mediaType === 'text/markdown') return true;
+  if (entry.uri?.match(/\.(md|markdown)$/i)) return true;
+  return false;
+}
+
 // Display file content
 async function displayFileContent(entry) {
   hideAllContent();
@@ -799,6 +846,7 @@ async function displayFileContent(entry) {
 
     // Show content header
     elements.contentHeader.style.display = 'block';
+    elements.closeContentBtn.style.display = 'block';
     elements.contentKind.textContent = entry.kind;
     elements.contentTitle.textContent = entry.title || entry.id;
     elements.contentUri.textContent = entry.uri;
@@ -807,7 +855,18 @@ async function displayFileContent(entry) {
 
     // Show content
     elements.contentDisplay.style.display = 'block';
-    elements.contentPre.textContent = content;
+
+    if (isMarkdown(entry) && typeof marked !== 'undefined') {
+      // Render markdown as HTML
+      elements.contentPre.style.display = 'none';
+      elements.contentMarkdown.style.display = 'block';
+      elements.contentMarkdown.innerHTML = marked.parse(content);
+    } else {
+      // Show raw content
+      elements.contentPre.style.display = 'block';
+      elements.contentMarkdown.style.display = 'none';
+      elements.contentPre.textContent = content;
+    }
 
   } catch (error) {
     throw new Error(`Failed to fetch content: ${error.message}`);

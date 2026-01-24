@@ -3,7 +3,7 @@
     "specVersion": "fwdslsh.dev/rabit/schemas/0.4.0/warren",
     "kind": "warren",
     "title": "fwdslsh warren",
-    "description": "Registry containing a burrow reference for the fwdslsh digthub repositories.",
+    "description": "Registry containing a burrow reference for the fwdslsh github repositories.",
     "updated": "2026-01-13T00:00:00Z",
     "burrows": [
         {
@@ -13,7 +13,7 @@
             "uri": "https://github.com/fwdslsh/rabit",
             "tags": [
                 "repo",
-                "digthub",
+                "github",
                 "rabit"
             ],
             "priority": 10,

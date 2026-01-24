@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Warren Browser - Rabit Content Navigator</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <div class="app">
     <!-- Header -->
     <header class="header">
+      <button id="expand-sidebar" class="btn btn-icon sidebar-expand" title="Show sidebar">☰</button>
       <div class="logo">
         <span class="logo-icon">🐰</span>
         <span class="logo-text">Warren Browser</span>
@@ -32,15 +34,16 @@
 
     <!-- Main Layout -->
     <div class="main-layout">
-      <!-- Sidebar Toggle (visible when collapsed) -->
-      <button id="expand-sidebar" class="btn btn-icon sidebar-toggle" title="Show sidebar" style="display: none;">▶</button>
-
       <!-- Sidebar Navigation -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-          <button id="back-btn" class="btn btn-icon btn-sm" title="Go back" style="display: none;">←</button>
           <h2 class="sidebar-title">Navigation</h2>
-          <button id="collapse-sidebar" class="btn btn-icon btn-sm" title="Collapse">◀</button>
+          <button id="collapse-sidebar" class="btn btn-icon btn-sm" title="Hide sidebar">«</button>
+        </div>
+
+        <!-- Back navigation (shown when navigated into burrows) -->
+        <div class="sidebar-back" id="sidebar-back" style="display: none;">
+          <button id="back-btn" class="btn-back" title="Go back">← Back</button>
         </div>
 
         <!-- Warren Info -->
@@ -76,9 +79,12 @@
         </nav>
 
         <div class="content-header" id="content-header" style="display: none;">
-          <div class="content-meta">
-            <span class="content-kind" id="content-kind"></span>
-            <h1 class="content-title" id="content-title"></h1>
+          <div class="content-header-row">
+            <div class="content-meta">
+              <span class="content-kind" id="content-kind"></span>
+              <h1 class="content-title" id="content-title"></h1>
+            </div>
+            <button id="close-content-btn" class="btn btn-icon" title="Close">✕</button>
           </div>
           <div class="content-info">
             <span class="info-item" id="content-uri"></span>
@@ -114,11 +120,11 @@
           <!-- Content Display -->
           <div class="content-display" id="content-display" style="display: none;">
             <pre class="content-pre" id="content-pre"></pre>
+            <div class="content-markdown" id="content-markdown"></div>
           </div>
 
           <!-- Burrow Display -->
           <div class="burrow-display" id="burrow-display" style="display: none;">
-            <div class="burrow-info" id="burrow-info"></div>
             <div class="burrow-entries" id="burrow-entries"></div>
           </div>
         </div>
